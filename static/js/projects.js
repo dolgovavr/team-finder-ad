@@ -44,9 +44,29 @@
       const userName = participateBtn.dataset.userName || "";
       const userAvatar = participateBtn.dataset.userAvatar || "";
 
+      /** Счётчик = число карточек участников в списке (как на сервере после перезагрузки). */
+      function syncParticipantCountFromList() {
+        const n = participantsList.querySelectorAll('a[id^="participant-"]').length;
+        participantsCount.textContent = String(Math.max(0, n));
+        const noEl = document.getElementById("no-participants");
+        if (n === 0) {
+          if (!noEl) {
+            const p = document.createElement("p");
+            p.id = "no-participants";
+            p.textContent = "Пока нет участников";
+            participantsList.appendChild(p);
+          }
+        } else if (noEl) {
+          noEl.remove();
+        }
+      }
+
+      let participateBusy = false;
+
       participateBtn.addEventListener("click", function(e) {
         e.preventDefault();
-        if (!projectId) return;
+        if (!projectId || participateBusy) return;
+        participateBusy = true;
 
         fetch(`/projects/${projectId}/toggle-participate/`, {
           method: "POST",
@@ -64,16 +84,19 @@
             return;
           }
 
-          if (data.participant) {
+          const joined =
+            data.is_participant === true ||
+            data.is_participant === "true" ||
+            data.is_participant === 1;
+
+          if (joined) {
             participateBtn.textContent = "Отказаться от участия";
 
-            const noParticipants = document.getElementById("no-participants");
-            if (noParticipants) noParticipants.remove();
-
-            const a = document.createElement("a");
-            a.href = `/users/${userId}`;
-            a.id = `participant-${userId}`;
-            a.innerHTML = `
+            if (userId && !document.getElementById(`participant-${userId}`)) {
+              const a = document.createElement("a");
+              a.href = `/users/${userId}`;
+              a.id = `participant-${userId}`;
+              a.innerHTML = `
               <div class="participant-item">
                 <img src="${userAvatar}" alt="Аватар" class="participant-avatar">
                 <div class="participant-info">
@@ -82,30 +105,22 @@
                 </div>
               </div>
             `;
-            participantsList.appendChild(a);
-
-            participantsCount.textContent = parseInt(participantsCount.textContent) + 1;
-
+              participantsList.appendChild(a);
+            }
           } else {
             participateBtn.textContent = "Участвовать";
-
-            const el = document.getElementById(`participant-${userId}`);
+            const el = userId ? document.getElementById(`participant-${userId}`) : null;
             if (el) el.remove();
-
-            const newCount = parseInt(participantsCount.textContent) - 1;
-            participantsCount.textContent = newCount;
-
-            if (newCount === 0) {
-              const p = document.createElement("p");
-              p.id = "no-participants";
-              p.textContent = "Пока нет участников";
-              participantsList.appendChild(p);
-            }
           }
+
+          syncParticipantCountFromList();
         })
         .catch(err => {
           console.error("Ошибка запроса:", err);
           if (window.toast) window.toast("Ошибка сети", { type: 'error' });
+        })
+        .finally(() => {
+          participateBusy = false;
         });
       });
     }

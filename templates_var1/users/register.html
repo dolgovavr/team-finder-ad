@@ -12,15 +12,49 @@
     <h2>Регистрация</h2>
     <form method="post">
         {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div class="errorlist">{{ form.non_field_errors }}</div>
+        {% endif %}
+
         <div class="name-fields">
-            <div>{{ form.name.label_tag }} {{ form.name }}</div>
-            <div>{{ form.surname.label_tag }} {{ form.surname }}</div>
+            <div>
+                <label>Имя:</label>
+                {{ form.name }}
+                {{ form.name.errors }}
+            </div>
+            <div>
+                <label>Фамилия:</label>
+                {{ form.surname }}
+                {{ form.surname.errors }}
+            </div>
         </div>
-        {{ form.email.label_tag }} {{ form.email }}
-        {{ form.password.label_tag }} {{ form.password }}
-        {% for error in form.errors.values %}
-        <p style="color: red;">{{error}}</p>
-        {% endfor %}
+
+        <div>
+            <label>Email:</label>
+            {{ form.email }}
+            {{ form.email.errors }}
+        </div>
+
+        <div>
+            <label>Телефон:</label>
+            {{ form.phone }}
+            {{ form.phone.errors }}
+            <small>Формат: 8XXXXXXXXXX или +7XXXXXXXXXX</small>
+        </div>
+
+        <div>
+            <label>Пароль:</label>
+            {{ form.password }}
+            {{ form.password.errors }}
+        </div>
+
+        <div>
+            <label>Подтверждение пароля:</label>
+            {{ form.password_confirm }}
+            {{ form.password_confirm.errors }}
+        </div>
+
         <button type="submit">Зарегистрироваться</button>
     </form>
     <p class="auth-link">Уже есть аккаунт? <a href="{% url 'users:login' %}">Войти</a></p>

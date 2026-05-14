@@ -1,14 +1,31 @@
 services:
   db:
     image: postgres:16
-    env_file:
-      - .env
-    container_name: teamfinder_db
+    environment:
+      POSTGRES_DB: team_finder
+      POSTGRES_USER: team_finder
+      POSTGRES_PASSWORD: team_finder
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U team_finder"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-volumes:
-  postgres_data:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: team_finder
+      POSTGRES_USER: team_finder
+      POSTGRES_PASSWORD: team_finder
+      DJANGO_SECRET_KEY: docker-dev-insecure-change-me
+      DJANGO_DEBUG: "True"
+      SERVE_MEDIA: "True"

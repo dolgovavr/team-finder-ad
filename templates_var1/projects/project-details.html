@@ -77,7 +77,7 @@
                 {% endif %}
             {% else %}
                 {% if user.is_authenticated %}
-                    <button id="participate-btn" class="black-button"
+                    <button type="button" id="participate-btn" class="black-button"
                             data-project="{{ project.id }}"
                             data-user-id="{{ request.user.id }}"
                             data-user-name="{{ request.user.name }} {{ request.user.surname }}"
